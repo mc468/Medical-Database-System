@@ -1,0 +1,645 @@
+package njit.cs631;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.sql.*;
+
+import njit.cs631.DBUtils;
+import njit.cs631.Patient;
+
+public class JDBC {
+		
+	private  Connection conn;
+	private PreparedStatement pstm;
+	private List<Patient> patientlist;
+	private List<Diagnosisforillness> diagnosisforillnesslist;
+	private List<Schedule> scheduleperdocdaylist;
+	private List<Clinicbed> clinicbedlist;
+	private List<Live> livelist;
+	private List<Care> carelist;
+	private List<Attendto> attendtolist;
+	private List<Surgery> surgeryperroomdaylist;
+	private List<Surgery> surgeryperdocdaylist;
+	private List<Surgery> surgeryperpatientlist;
+	private List<Clinicpersonnel> clinicpersonnellist;
+	private List<Clinicpersonnel> clinicpersonnelperjobtypelist;
+	private ResultSet rs;
+	
+	public JDBC(Connection conn){
+		this.conn=conn;
+	}
+	
+	public  Connection getConnection() {  
+	        conn = null;  
+	        try {  
+	            Class.forName("com.mysql.jdbc.Driver");/ 
+	              
+	            conn = DriverManager.getConnection(  
+	                    "jdbc:mysql://localhost:3306/mydb", "root", "root");  
+	              
+	        } catch (Exception e) {  
+	            System.out.println("database connection failed" + e.getMessage());  
+	        }  
+	        return conn;   
+	    }  
+	public void insertPatient(Patient patient)
+	{
+  	 try
+		{
+			pstm=conn.prepareStatement("insert into patient(Patientnumber,Patientaddress,Patientname,Patientgender,PatientSSN,Patientphonenumber,Patientbirth) values(?,?,?,?,?,?,?)");
+			pstm.setInt(1, patient.getPatientnumber());
+			pstm.setString(2, patient.getPatientaddress());
+			pstm.setString(3, patient.getPatientname());
+			pstm.setString(4, patient.getPatientgender());
+			pstm.setInt(5, patient.getPatientSSN());
+			pstm.setInt(6, patient.getPatientphonenumber());
+			pstm.setString(7, patient.getPatientbirth());
+			pstm.executeUpdate();
+		} 
+		catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally
+		{
+			DBUtils.close(pstm);
+		}
+		
+	}
+	
+	 public void insert(Patient p){
+		 conn=getConnection();
+		 try {
+		pstm=conn.prepareStatement("insert patient(patientname,patientgender) values(?,?)");
+			 pstm.setString(1, p.getPatientname());
+			 pstm.setString(2, p.getPatientgender());
+			 pstm.executeUpdate();
+			 conn.close();
+			 pstm.close();
+		} catch (SQLException e) {			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	 }
+	 
+	 public List<Patient> query(){
+		 conn=getConnection();
+		 patientlist=new ArrayList<Patient>();
+		 try {
+			pstm=conn.prepareStatement("select* from patient");
+			 rs=pstm.executeQuery();
+			 while(rs.next()){
+				 Patient p=new Patient();
+				 p.setPatientname(rs.getString("patientname"));
+				 p.setPatientgender(rs.getString("patientgender"));
+				 patientlist.add(p);
+			 }
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 return patientlist;
+	 }
+	 
+	 public List<Patient> queryPatient(){
+			patientlist=new ArrayList<Patient>();
+			try {
+				pstm=conn.prepareStatement("select* from patient");
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Patient patient=new Patient();
+					patient.setPatientnumber(rs.getInt("Patientnumber"));
+					patient.setPatientaddress(rs.getString("Patientaddress"));
+					patient.setPatientname(rs.getString("Patientname"));
+					patient.setPatientgender(rs.getString("Patientgender"));
+					patient.setPatientSSN(rs.getInt("PatientSSN"));
+					patient.setPatientphonenumber(rs.getInt("Patientphonenumber"));
+					patient.setPatientbirth(rs.getString("Patientbirth"));
+					patientlist.add(patient);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return patientlist;
+		}
+	 
+	 public List<Diagnosisforillness> queryDiagnosisforillness(){
+		 diagnosisforillnesslist=new ArrayList<Diagnosisforillness>();
+			try {
+				pstm=conn.prepareStatement("select* from diagnosisforillness");
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Diagnosisforillness diagnosisforillness=new Diagnosisforillness();
+					diagnosisforillness.setDiagnosiscode(rs.getString("Diagnosiscode"));
+					diagnosisforillness.setIllnesscode(rs.getString("Illnesscode"));
+					diagnosisforillnesslist.add(diagnosisforillness);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return diagnosisforillnesslist;
+		}
+
+	 public List<Schedule> queryScheduleperdocday(Schedule schedule){
+		 scheduleperdocdaylist=new ArrayList<Schedule>();
+			try {
+				pstm=conn.prepareStatement("select* from schedule where EMPnumber=? and day=?");
+				pstm.setInt(1, schedule.getEMPnumber());
+				pstm.setInt(2, schedule.getday());
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Schedule schedule1=new Schedule();
+					schedule1.setEMPnumber(rs.getInt("EMPnumber"));
+					schedule1.setPatientnumber(rs.getInt("Patientnumber"));
+					schedule1.setday(rs.getInt("day"));
+					schedule1.setbegintime(rs.getString("begintime"));
+					scheduleperdocdaylist.add(schedule1);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return scheduleperdocdaylist;
+		}
+	 
+	 public List<Clinicbed> queryClinicbed(){
+		 clinicbedlist=new ArrayList<Clinicbed>();
+			try {
+				pstm=conn.prepareStatement("select * from clinicbed where bednumber not in (select bednumber from live)");
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Clinicbed clinicbed=new Clinicbed();
+					clinicbed.setbednumber(rs.getInt("bednumber"));
+					clinicbed.setroomnumber(rs.getInt("roomnumber"));
+					clinicbed.setbedletter(rs.getString("bedletter"));
+					clinicbed.setnursingunit(rs.getInt("nursingunit"));
+					clinicbed.setwing(rs.getString("wing"));
+					clinicbedlist.add(clinicbed);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return clinicbedlist;
+		}
+	 
+	 public void insertSchedule(Schedule schedule){
+		 try
+			{
+				pstm=conn.prepareStatement("insert into schedule(EMPnumber,Patientnumber,day,begintime) values(?,?,?,?)");
+				pstm.setInt(1, schedule.getEMPnumber());
+				pstm.setInt(2, schedule.getPatientnumber());
+				pstm.setInt(3, schedule.getday());
+				pstm.setString(4, schedule.getbegintime());
+				
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public void insertClinicpersonnel(Clinicpersonnel clinicpersonnel){
+		 try
+			{
+				pstm=conn.prepareStatement("insert into clinicpersonnel(EMPnumber,Clinicpersonnelgender,Clinicpersonnelname,Clinicpersonneladdress,ClinicpersonnelSSN,Clinicpersonnelsalary,phonenumber,worktype,physicianspecialty,physiciantype,contractlength,contractamount,contracttype,grade,years) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+				pstm.setInt(1, clinicpersonnel.getEMPnumber());
+				pstm.setString(2, clinicpersonnel.getClinicpersonnelgender());
+				pstm.setString(3, clinicpersonnel.getClinicpersonnelname());
+				pstm.setString(4, clinicpersonnel.getClinicpersonneladdress());
+				pstm.setInt(5, clinicpersonnel.getClinicpersonnelSSN());
+				pstm.setInt(6, clinicpersonnel.getClinicpersonnelsalary());
+				pstm.setInt(7, clinicpersonnel.getphonenumber());
+				pstm.setString(8, clinicpersonnel.getworktype());
+				pstm.setString(9, clinicpersonnel.getphysicianspecialty());
+				pstm.setString(10, clinicpersonnel.getphysiciantype());
+				pstm.setString(11, clinicpersonnel.getcontractlength());
+				pstm.setInt(12, clinicpersonnel.getcontractamount());
+				pstm.setString(13, clinicpersonnel.getcontracttype());
+				pstm.setString(14, clinicpersonnel.getgrade());
+				pstm.setInt(15, clinicpersonnel.getyears());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public void insertShift(Shift shift){
+		 try
+			{
+				pstm=conn.prepareStatement("insert into shift(EMPnumber,day,begintime,endtime) values(?,?,?,?)");
+				pstm.setInt(1, shift.getEMPnumber());
+				pstm.setInt(2, shift.getday());
+				pstm.setString(3, shift.getbegintime());
+				pstm.setString(4, shift.getendtime());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public void insertLive(Live live){
+		 try
+			{
+				pstm=conn.prepareStatement("insert into live(Patientnumber,bednumber,datein,dateout) values(?,?,?,?)");
+				pstm.setInt(1, live.getPatientnumber());
+				pstm.setInt(2, live.getbednumber());
+				pstm.setString(3, live.getdatein());
+				pstm.setString(4, live.getdateout());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public void deleteLive(Live live){
+		 try
+			{
+				pstm=conn.prepareStatement("delete from live where Patientnumber=?");
+				pstm.setInt(1, live.getPatientnumber());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public List<Live> queryLive(){
+		 livelist=new ArrayList<Live>();
+			try {
+				pstm=conn.prepareStatement("select * from live");
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Live live=new Live();
+					live.setPatientnumber(rs.getInt("Patientnumber"));
+					live.setbednumber(rs.getInt("bednumber"));
+					live.setdatein(rs.getString("datein"));
+					live.setdateout(rs.getString("dateout"));
+					livelist.add(live);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return livelist;
+		}
+	 
+	 public void insertCare(Care care){
+		 try
+			{
+				pstm=conn.prepareStatement("insert into care(Patientnumber,EMPnumber) values(?,?)");
+				pstm.setInt(1, care.getPatientnumber());
+				pstm.setInt(2, care.getEMPnumber());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public List<Care> queryCare(){
+		 carelist=new ArrayList<Care>();
+			try {
+				pstm=conn.prepareStatement("select * from care");
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Care care=new Care();
+					care.setPatientnumber(rs.getInt("Patientnumber"));
+					care.setEMPnumber(rs.getInt("EMPnumber"));
+					carelist.add(care);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return carelist;
+		}
+	 
+	 public void deleteCare(Care care){
+		 try
+			{
+				pstm=conn.prepareStatement("delete from care where Patientnumber=?");
+				pstm.setInt(1, care.getPatientnumber());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public void insertAttendto(Attendto attendto){
+		 try
+			{
+				pstm=conn.prepareStatement("insert into attendto(Patientnumber,EMPnumber) values(?,?)");
+				pstm.setInt(1, attendto.getPatientnumber());
+				pstm.setInt(2, attendto.getEMPnumber());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public List<Attendto> queryAttendto(){
+		 attendtolist=new ArrayList<Attendto>();
+			try {
+				pstm=conn.prepareStatement("select * from attendto");
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Attendto attendto=new Attendto();
+					attendto.setPatientnumber(rs.getInt("Patientnumber"));
+					attendto.setEMPnumber(rs.getInt("EMPnumber"));
+					attendtolist.add(attendto);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return attendtolist;
+		}
+	 
+	 public void deleteAttendto(Attendto attendto){
+		 try
+			{
+				pstm=conn.prepareStatement("delete from attendto where Patientnumber=?");
+				pstm.setInt(1, attendto.getPatientnumber());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public void insertSurgery(Surgery surgery){
+		 try
+			{
+				pstm=conn.prepareStatement("insert into surgery(Surgerynumber,EMPnumber,Surgerycode,Patientnumber,Surgerydate,theater) values(?,?,?,?,?,?)");
+				pstm.setInt(1, surgery.getSurgerynumber());
+				pstm.setInt(2, surgery.getEMPnumber());
+				pstm.setString(3, surgery.getSurgerycode());
+				pstm.setInt(4, surgery.getPatientnumber());
+				pstm.setString(5, surgery.getSurgerydate());
+				pstm.setString(6, surgery.gettheater());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public List<Surgery> querySurgeryperroomday(Surgery surgery){
+		 surgeryperroomdaylist=new ArrayList<Surgery>();
+			try {
+				pstm=conn.prepareStatement("select* from surgery where theater=? and Surgerydate=?");
+				pstm.setString(1, surgery.gettheater());
+				pstm.setString(2, surgery.getSurgerydate());
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Surgery surgery1=new Surgery();
+					surgery1.setSurgerynumber(rs.getInt("Surgerynumber"));
+					surgery1.setEMPnumber(rs.getInt("EMPnumber"));
+					surgery1.setSurgerycode(rs.getString("Surgerycode"));
+					surgery1.setPatientnumber(rs.getInt("Patientnumber"));
+					surgery1.setSurgerydate(rs.getString("Surgerydate"));
+					surgery1.settheater(rs.getString("theater"));
+					surgeryperroomdaylist.add(surgery1);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return surgeryperroomdaylist;
+		}
+	 
+	 public List<Surgery> querySurgeryperdocday(Surgery surgery){
+		 surgeryperdocdaylist=new ArrayList<Surgery>();
+			try {
+				pstm=conn.prepareStatement("select* from surgery where EMPnumber=? and Surgerydate=?");
+				pstm.setInt(1, surgery.getEMPnumber());
+				pstm.setString(2, surgery.getSurgerydate());
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Surgery surgery1=new Surgery();
+					surgery1.setSurgerynumber(rs.getInt("Surgerynumber"));
+					surgery1.setEMPnumber(rs.getInt("EMPnumber"));
+					surgery1.setSurgerycode(rs.getString("Surgerycode"));
+					surgery1.setPatientnumber(rs.getInt("Patientnumber"));
+					surgery1.setSurgerydate(rs.getString("Surgerydate"));
+					surgery1.settheater(rs.getString("theater"));
+					surgeryperdocdaylist.add(surgery1);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return surgeryperdocdaylist;
+		}
+	 
+	 public List<Surgery> querySurgeryperpatient(Surgery surgery){
+		 surgeryperpatientlist=new ArrayList<Surgery>();
+			try {
+				pstm=conn.prepareStatement("select* from surgery where Patientnumber=?");
+				pstm.setInt(1, surgery.getPatientnumber());
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Surgery surgery1=new Surgery();
+					surgery1.setSurgerynumber(rs.getInt("Surgerynumber"));
+					surgery1.setEMPnumber(rs.getInt("EMPnumber"));
+					surgery1.setSurgerycode(rs.getString("Surgerycode"));
+					surgery1.setPatientnumber(rs.getInt("Patientnumber"));
+					surgery1.setSurgerydate(rs.getString("Surgerydate"));
+					surgery1.settheater(rs.getString("theater"));
+					surgeryperpatientlist.add(surgery1);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return surgeryperpatientlist;
+		}
+	 
+	 public List<Clinicpersonnel> queryClinicpersonnel(){
+		 clinicpersonnellist=new ArrayList<Clinicpersonnel>();
+		 try
+			{
+				pstm=conn.prepareStatement("select* from clinicpersonnel");
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Clinicpersonnel clinicpersonnel=new Clinicpersonnel();
+					clinicpersonnel.setEMPnumber(rs.getInt("EMPnumber"));
+					clinicpersonnel.setClinicpersonnelgender(rs.getString("Clinicpersonnelgender"));
+					clinicpersonnel.setClinicpersonnelname(rs.getString("Clinicpersonnelname"));
+					clinicpersonnel.setClinicpersonneladdress(rs.getString("Clinicpersonneladdress"));
+					clinicpersonnel.setClinicpersonnelSSN(rs.getInt("ClinicpersonnelSSN"));
+					clinicpersonnel.setClinicpersonnelsalary(rs.getInt("Clinicpersonnelsalary"));
+					clinicpersonnel.setphonenumber(rs.getInt("phonenumber"));
+					clinicpersonnel.setworktype(rs.getString("worktype"));
+					clinicpersonnel.setphysicianspecialty(rs.getString("physicianspecialty"));
+					clinicpersonnel.setphysiciantype(rs.getString("physiciantype"));
+					clinicpersonnel.setcontractlength(rs.getString("contractlength"));
+					clinicpersonnel.setcontractamount(rs.getInt("contractamount"));
+					clinicpersonnel.setcontracttype(rs.getString("contracttype"));
+					clinicpersonnel.setgrade(rs.getString("grade"));
+					clinicpersonnel.setyears(rs.getInt("years"));
+					clinicpersonnellist.add(clinicpersonnel);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return clinicpersonnellist;
+	 }
+	 
+	 public void deleteClinicpersonnel(Clinicpersonnel clinicpersonnel){
+		 try
+			{
+				pstm=conn.prepareStatement("delete from clinicpersonnel where EMPnumber=?");
+				pstm.setInt(1, clinicpersonnel.getEMPnumber());
+				pstm.executeUpdate();
+			} 
+			catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				DBUtils.close(pstm);
+			}
+	 }
+	 
+	 public List<Clinicpersonnel> queryClinicpersonnelperjobtype(Clinicpersonnel clinicpersonnel){
+		 clinicpersonnelperjobtypelist=new ArrayList<Clinicpersonnel>();
+		 try
+			{
+				pstm=conn.prepareStatement("select* from clinicpersonnel where worktype=?");
+				pstm.setString(1, clinicpersonnel.getworktype());
+				rs=pstm.executeQuery();
+				while(rs.next()){
+					Clinicpersonnel clinicpersonnel1=new Clinicpersonnel();
+					clinicpersonnel1.setEMPnumber(rs.getInt("EMPnumber"));
+					clinicpersonnel1.setClinicpersonnelgender(rs.getString("Clinicpersonnelgender"));
+					clinicpersonnel1.setClinicpersonnelname(rs.getString("Clinicpersonnelname"));
+					clinicpersonnel1.setClinicpersonneladdress(rs.getString("Clinicpersonneladdress"));
+					clinicpersonnel1.setClinicpersonnelSSN(rs.getInt("ClinicpersonnelSSN"));
+					clinicpersonnel1.setClinicpersonnelsalary(rs.getInt("Clinicpersonnelsalary"));
+					clinicpersonnel1.setphonenumber(rs.getInt("phonenumber"));
+					clinicpersonnel1.setworktype(rs.getString("worktype"));
+					clinicpersonnel1.setphysicianspecialty(rs.getString("physicianspecialty"));
+					clinicpersonnel1.setphysiciantype(rs.getString("physiciantype"));
+					clinicpersonnel1.setcontractlength(rs.getString("contractlength"));
+					clinicpersonnel1.setcontractamount(rs.getInt("contractamount"));
+					clinicpersonnel1.setcontracttype(rs.getString("contracttype"));
+					clinicpersonnel1.setgrade(rs.getString("grade"));
+					clinicpersonnel1.setyears(rs.getInt("years"));
+					clinicpersonnelperjobtypelist.add(clinicpersonnel1);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally{
+				DBUtils.close(pstm);
+				DBUtils.close(rs);
+			}
+			return clinicpersonnelperjobtypelist;
+	 }
+	 
+	 public static void main(String[] args) {
+		JDBC j=new JDBC();
+		Patient p=new Patient();
+		p.setPatientname("asd");
+		p.setPatientgender("f");
+		j.insert(p);
+	}
+}
+
