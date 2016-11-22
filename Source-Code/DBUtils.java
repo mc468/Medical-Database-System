@@ -9,22 +9,20 @@ import java.sql.SQLException;
 public class DBUtils 
 {
 
-	//��
+	
 	private final static String driver="com.mysql.jdbc.Driver";
-	//���Ӵ�
+	
 	private final static String url="jdbc:mysql://localhost:3306/mydb";
 	
 	private DBUtils(){
 	}
 	
-	/**
-	 * ��̬��
-	 */
+	
 	static
 	{
 		try
 		{
-			//������
+			
 			Class.forName(driver);
 		} 
 		catch (ClassNotFoundException e) {
@@ -36,9 +34,9 @@ public class DBUtils
 	
 	public static Connection getConnection()throws Exception
 	{
-		//��ȡ����
+		
 		Connection conn=DriverManager.getConnection(url, "root", "root");
-		//��������
+		
 		return conn;
 	}	
 	
